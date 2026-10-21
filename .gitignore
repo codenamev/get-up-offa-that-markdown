@@ -1,0 +1,7 @@
+# Built by `scarpe package`; published as GitHub Release assets instead
+dist/
+# Scratch pictures from `scarpe.sh peek`
+shots/
+# The icon before its corners are cut (icon/icon.png is the one the package uses)
+icon/square.png
+.DS_Store
