@@ -7,7 +7,7 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
 
 ![The editor: Markdown on the left, the rendered page on the right](docs/screenshot.png)
 
-**Website:** https://www.codenamev.com/get-up-offa-that-markdown/
+**Website:** https://markdown.codenamev.com/
 
 ## What it does
 
