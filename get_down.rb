@@ -3,13 +3,18 @@
 # Type on the left, watch it render on the right. Open and Save work on .md files,
 # and whatever you are writing is kept as a draft between runs.
 #
-# The renderer is hand-rolled (a packaged Scarpe app carries no gems): headings, paragraphs,
+# The renderer is hand-rolled: headings, paragraphs,
 # **bold**, *italic*, `code`, [links](https://...), ![images](pic.png), lists, > quotes,
 # ``` fences and --- rules.
 
 require "json"
 require "fileutils"
 require "pathname"
+require_relative "spelling"
+
+unless ENV["SCARPE_DISPLAY_SERVICE"] == "native" && Shoes::EditBox.method_defined?(:replace_checked)
+  raise "Spell checking requires the local Scarpe spelling extension; see README.md."
+end
 
 INK = "#2b2118"
 MUTED = "#8c7b6b"
@@ -250,6 +255,11 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
 
   def render
     text = @editor.text
+    previous = @rendered_text || text
+    @rendered_text = text
+    @spelling_timer&.stop
+    @spelling_generation += 1
+    generation = @spelling_generation
     @preview.clear do
       blocks = Markdown.blocks(text)
       if blocks.empty?
@@ -260,6 +270,21 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
     words = text.split.size
     @status.text = "#{@path ? File.basename(@path) : "Untitled"}  ·  #{words} #{words == 1 ? "word" : "words"}"
     save_draft
+    findings = @spelling.check(text)
+    @editor.spelling = { text: text, ranges: findings.map { |finding| [finding.first, finding.last] } }
+    context = @editor.edit_context
+    if context && context["autocorrect"] && @autocorrect.checked?
+      @spelling_previous ||= previous
+      baseline = @spelling_previous
+      @spelling_timer = timer(0.6) do
+        next unless @editor.text == text && @autocorrect.checked?
+
+        @spelling_jobs.clear
+        @spelling_jobs << [generation, text, findings, baseline, context.fetch("cursor")]
+      end
+    else
+      @spelling_previous = nil
+    end
   end
 
   def open_file
@@ -307,8 +332,28 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
     render
   end
 
+  def autocorrect_changed
+    @spelling_generation += 1
+    @spelling_previous = nil
+    @spelling_timer&.stop
+    @spelling_jobs.clear
+  end
+
   draft = load_draft
   @path = draft["path"]
+  @spelling = Spelling.new
+  @spelling_generation = 0
+  @spelling_jobs = Queue.new
+  @spelling_results = Queue.new
+  @spelling_worker = Thread.new do
+    checker = Spelling.new
+    loop do
+      generation, text, findings, previous, cursor = @spelling_jobs.pop
+      corrected = checker.autocorrect(text, findings, previous: previous, cursor: cursor)
+      @spelling_results << [generation, text, corrected]
+    end
+  end
+  finish { @spelling_worker.kill.join }
 
   # Shows the panes that are switched on, sharing the width between them. One always stays on.
   def show_panes(changed)
@@ -364,7 +409,13 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
   end
 
   # which panes show, on the right of the pane labels
-  flow right: 20, top: 74, width: 190 do
+  flow right: 20, top: 74, width: 290 do
+    @autocorrect = check { autocorrect_changed }
+    @autocorrect.checked = true
+    para("Autocorrect", size: 13, stroke: INK, margin: [4, 2, 16, 0]).click do
+      @autocorrect.checked = !@autocorrect.checked?
+      autocorrect_changed
+    end
     @show_write = check { show_panes(:write) }
     para("Write", size: 13, stroke: INK, margin: [4, 2, 16, 0]).click { flip(@show_write, :write) }
     @show_preview = check { show_panes(:preview) }
@@ -375,5 +426,18 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
 
   @show_write.checked = true
   @show_preview.checked = true
+  @spelling_poller = animate(20) do
+    unless @spelling_worker.alive?
+      @spelling_poller.stop
+      @spelling_worker.value
+    end
+    until @spelling_results.empty?
+      generation, text, corrected = @spelling_results.pop
+      next unless generation == @spelling_generation && @autocorrect.checked? && @editor.text == text
+
+      @spelling_previous = nil
+      @editor.replace_checked(text, corrected) unless corrected == text
+    end
+  end
   render
 end

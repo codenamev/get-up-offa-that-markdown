@@ -20,6 +20,8 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
 - Opens a `.md` file that you drag onto the window, or open with it from Finder (**Open With**).
   Drag in a picture or any other file, and an image or link to it goes in where you were typing.
 - Opens a link to another `.md` file in the editor. Web links open in your browser.
+- Underlines misspelled prose in red using offline [Kotoshu](https://github.com/kotoshu/kotoshu) and bundled American English. Markdown code and URL/email targets are excluded.
+- Autocorrects newly completed words after a short pause. Only the first suggestion is considered, and it must be exactly one edit away and accepted by the dictionary. Lowercase/title case is preserved; ALL CAPS, mixed case, dotted names, and identifier-like tokens stay report-only. Turn off **Autocorrect** to keep underlines without replacements; Cmd-Z undoes a correction.
 
 ## Install
 
@@ -39,32 +41,35 @@ bundled inside it, so you don't need to install anything.
 
 ## Run it from source
 
-This needs Ruby 3.2.11 or newer and Rust 1.89 or newer. Until
-[scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648) and
-[#650](https://github.com/scarpe-team/scarpe/pull/650) are merged, the editor needs the Scarpe
-branch that adds dropping files (`drop`), inserting text at the cursor (`insert`) and opening
-files from Finder:
+This needs Ruby 3.2.11 or newer and Rust 1.89 or newer. The Gemfile pins [codenamev/scarpe#1](https://github.com/codenamev/scarpe/pull/1) at `0fa039c4`, providing spelling underlines and undo-safe replacements on top of the `native/drop-files` branch ([scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648)). Bundler installs all three Scarpe components from the same revision; a separate clone is not needed.
 
 ```sh
-git clone --branch native/open-documents https://github.com/codenamev/scarpe.git ~/scarpe
-cd ~/scarpe && gem install bundler -v 2.4.10 && bundle install
-
 git clone https://github.com/codenamev/get-up-offa-that-markdown.git
-cd ~/scarpe && bundle exec ruby exe/scarpe --native /path/to/get-up-offa-that-markdown/get_down.rb
+cd get-up-offa-that-markdown
+gem install bundler -v 2.4.10
+bundle install
+bundle exec scarpe --native "$PWD/get_down.rb"
 ```
 
 The first run builds Scarpe's renderer, which takes about a minute.
 
+Opening a file only checks it; autocorrection starts with newly typed/pasted text, not existing file contents. The word still being typed is never corrected.
+
+If Ruby 3.3 headers fail Nokogiri's feature probes with Xcode 26/Clang 21, install with `BUNDLE_BUILD__NOKOGIRI='--with-cflags=-Wno-default-const-init-field-unsafe' bundle install` instead. This flag applies only to that installation command.
+
 ### Developing
 
-`./scarpe.sh` runs Scarpe from `~/scarpe` (or `$SCARPE`) without touching your clipboard,
-sounds or real home folder. To render the app headless and save a picture of it:
+`./scarpe.sh` runs the pinned Scarpe dependency (or `$SCARPE` for a source checkout override) without touching your clipboard, sounds or real home folder. To render the app headless and save a picture of it:
 
 ```sh
 ./scarpe.sh peek get_down.rb --scale 2 --shot shots/look.png --layout
 ```
 
+Run spelling checks with `bundle exec ruby test/spelling_test.rb`. The bundled dictionary's license and pinned provenance are in [data/en](data/en/README.md).
+
 ### Packaging
+
+The existing release does not include spellchecking. The development build now needs Kotoshu and Commonmarker; Scarpe's stock packager does not collect these extra gems. The packaging recipe below must not be used to distribute this development build until those dependencies are bundled.
 
 From the Scarpe clone:
 
