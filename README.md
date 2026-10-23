@@ -23,7 +23,7 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
 
 ## Install
 
-1. Download `Get-Up-Offa-That-Markdown-1.1.0-arm64.dmg` from the
+1. Download `Get-Up-Offa-That-Markdown-1.1.1-arm64.dmg` from the
    [latest release](https://github.com/codenamev/get-up-offa-that-markdown/releases/latest).
 2. Open it and drag the app into **Applications**.
 3. The first time, macOS will block it, because the app isn't notarised by Apple. Open it once
@@ -76,7 +76,7 @@ magick icon/square.png \( -size 1024x1024 xc:none -fill white \
 cd ~/scarpe && bundle exec ruby exe/scarpe package /path/to/get_down.rb --native --dmg \
   --name "Get Up Offa That Markdown" --icon /path/to/icon/icon.png --output /path/to/dist \
   --opens net.daringfireball.markdown --opens public.plain-text --opens md --opens markdown \
-  --app-version 1.1.0
+  --app-version 1.1.1
 ```
 
 `--opens` is what lets Finder offer the app under **Open With** for Markdown and text files.
