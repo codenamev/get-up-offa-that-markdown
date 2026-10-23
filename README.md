@@ -75,10 +75,14 @@ magick icon/square.png \( -size 1024x1024 xc:none -fill white \
 
 cd ~/scarpe && bundle exec ruby exe/scarpe package /path/to/get_down.rb --native --dmg \
   --name "Get Up Offa That Markdown" --icon /path/to/icon/icon.png --output /path/to/dist \
-  --opens net.daringfireball.markdown --opens public.plain-text --opens md --opens markdown
+  --opens net.daringfireball.markdown --opens public.plain-text --opens md --opens markdown \
+  --app-version 1.1.0
 ```
 
 `--opens` is what lets Finder offer the app under **Open With** for Markdown and text files.
+`--app-version` sets the version Finder's Get Info shows. It comes from
+[scarpe-team/scarpe#651](https://github.com/scarpe-team/scarpe/pull/651); until that's merged,
+leave it out, or build from a branch that also has that commit.
 
 ## Credits
 
