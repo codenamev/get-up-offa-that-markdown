@@ -17,13 +17,13 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
   window can be resized.
 - Opens, saves and starts new `.md` files.
 - Saves a draft as you type, so your work survives quitting.
-- Opens a `.md` file that you drag onto the window. Drag in a picture or any other file, and an
-  image or link to it goes in where you were typing.
+- Opens a `.md` file that you drag onto the window, or open with it from Finder (**Open With**).
+  Drag in a picture or any other file, and an image or link to it goes in where you were typing.
 - Opens a link to another `.md` file in the editor. Web links open in your browser.
 
 ## Install
 
-1. Download `Get-Up-Offa-That-Markdown-1.0.0-arm64.dmg` from the
+1. Download `Get-Up-Offa-That-Markdown-1.1.0-arm64.dmg` from the
    [latest release](https://github.com/codenamev/get-up-offa-that-markdown/releases/latest).
 2. Open it and drag the app into **Applications**.
 3. The first time, macOS will block it, because the app isn't notarised by Apple. Open it once
@@ -40,12 +40,13 @@ bundled inside it, so you don't need to install anything.
 ## Run it from source
 
 This needs Ruby 3.2.11 or newer and Rust 1.89 or newer. Until
-[scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648) is merged, the editor
-needs the Scarpe branch that adds dropping files (`drop`) and inserting text at the cursor
-(`insert`):
+[scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648) and
+[#650](https://github.com/scarpe-team/scarpe/pull/650) are merged, the editor needs the Scarpe
+branch that adds dropping files (`drop`), inserting text at the cursor (`insert`) and opening
+files from Finder:
 
 ```sh
-git clone --branch native/drop-files https://github.com/codenamev/scarpe.git ~/scarpe
+git clone --branch native/open-documents https://github.com/codenamev/scarpe.git ~/scarpe
 cd ~/scarpe && gem install bundler -v 2.4.10 && bundle install
 
 git clone https://github.com/codenamev/get-up-offa-that-markdown.git
@@ -73,8 +74,11 @@ magick icon/square.png \( -size 1024x1024 xc:none -fill white \
   -draw "roundrectangle 100,100 923,923 185,185" \) -compose DstIn -composite icon/icon.png
 
 cd ~/scarpe && bundle exec ruby exe/scarpe package /path/to/get_down.rb --native --dmg \
-  --name "Get Up Offa That Markdown" --icon /path/to/icon/icon.png --output /path/to/dist
+  --name "Get Up Offa That Markdown" --icon /path/to/icon/icon.png --output /path/to/dist \
+  --opens net.daringfireball.markdown --opens public.plain-text --opens md --opens markdown
 ```
+
+`--opens` is what lets Finder offer the app under **Open With** for Markdown and text files.
 
 ## Credits
 
