@@ -52,6 +52,40 @@ class SpellingTest < Minitest::Test
     assert_equal "hello ", correct("helo ", previous: "some longer text")
   end
 
+  def test_case_follows_hunspell
+    assert CHECKER.correct?("hello")
+    assert CHECKER.correct?("Hello"), "a lowercase word may start a sentence"
+    assert CHECKER.correct?("HELLO"), "or be shouted"
+    assert CHECKER.correct?("America")
+    refute CHECKER.correct?("america"), "a name keeps its capital"
+    assert CHECKER.correct?("don’t"), "a curly apostrophe reads as a straight one"
+  end
+
+  def test_autocorrect_only_takes_a_single_obvious_fix
+    assert_equal "receive", CHECKER.replacement("recieve")
+    assert_equal "until", CHECKER.replacement("untill")
+    assert_nil CHECKER.replacement("wierd"), "weird or wired"
+    assert_nil CHECKER.replacement("brwn"), "brown or brawn"
+  end
+
+  def test_a_word_never_suggested_is_still_accepted
+    taboo = File.read(File.join(Spelling::DATA, "nosuggest.txt")).split("\n").first
+    assert CHECKER.correct?(taboo)
+    refute_equal taboo, CHECKER.replacement("#{taboo}x")
+  end
+
+  def test_an_indented_list_item_is_prose_not_code
+    source = "- one\n\n    nested helo\n"
+    assert_equal ["helo"], CHECKER.check(source).map(&:word)
+  end
+
+  # tools/build_wordlist.rb expands en.dic and en.aff; checked against spylls' Hunspell when made.
+  def test_the_word_list_is_the_expanded_dictionary
+    words = File.read(File.join(Spelling::DATA, "words.txt")).split("\n")
+    assert_equal 123_699, words.size
+    %w[misspelled running unhappiness happily].each { |w| assert_includes words, w }
+  end
+
   private
 
   def correct(source, previous:)

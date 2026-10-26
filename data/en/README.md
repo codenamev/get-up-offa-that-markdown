@@ -4,6 +4,8 @@
 
 This is the SCOWL-derived American English Hunspell dictionary, version 2020.12.07 (size 60). Redistribution terms and notices are reproduced in full in [LICENSE](LICENSE); the app's MIT license does not replace them. No dictionaries are downloaded at runtime.
 
+The app reads `words.txt` (every accepted spelling, 123,699 of them) and `nosuggest.txt` (accepted, but never offered as a correction). `ruby tools/build_wordlist.rb` makes both from `en.dic` and `en.aff`; run it again if those change. When it was written, every word it lists was accepted by an independent Hunspell ([spylls](https://github.com/zverok/spylls)), and of the 235,974 words in macOS's `/usr/share/dict/words`, it missed none that Hunspell accepts.
+
 SHA-256 checksums:
 
 ```text
