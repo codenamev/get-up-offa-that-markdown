@@ -20,10 +20,17 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
 - Opens a `.md` file that you drag onto the window, or open with it from Finder (**Open With**).
   Drag in a picture or any other file, and an image or link to it goes in where you were typing.
 - Opens a link to another `.md` file in the editor. Web links open in your browser.
+- Underlines misspelled words in red as you type, checked offline against a bundled American
+  English dictionary. Code, links' targets, URLs and e-mail addresses are left alone.
+- Corrects a word you've just finished typing when there's one obvious fix: swapped letters
+  ("teh"), a missing or extra doubled letter ("helo"), or a single dictionary word one edit away.
+  When it isn't sure ("wierd": weird or wired?) it only underlines. Cmd-Z undoes a correction,
+  and unticking **Autocorrect** keeps the underlines without changing anything. Opening a file
+  never corrects what's already in it.
 
 ## Install
 
-1. Download `Get-Up-Offa-That-Markdown-1.1.1-arm64.dmg` from the
+1. Download `Get-Up-Offa-That-Markdown-1.2.0-arm64.dmg` from the
    [latest release](https://github.com/codenamev/get-up-offa-that-markdown/releases/latest).
 2. Open it and drag the app into **Applications**.
 3. The first time, macOS will block it, because the app isn't notarised by Apple. Open it once
@@ -39,34 +46,43 @@ bundled inside it, so you don't need to install anything.
 
 ## Run it from source
 
-This needs Ruby 3.2.11 or newer and Rust 1.89 or newer. Until
-[scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648) and
-[#650](https://github.com/scarpe-team/scarpe/pull/650) are merged, the editor needs the Scarpe
-branch that adds dropping files (`drop`), inserting text at the cursor (`insert`) and opening
-files from Finder:
+This needs Ruby 3.2.11 or newer and Rust 1.89 or newer. The Gemfile installs Scarpe from the
+`editor` branch of [codenamev/scarpe](https://github.com/codenamev/scarpe/tree/editor), pinned to
+one commit. That branch adds what the editor uses beyond upstream Scarpe: dropping files and
+inserting at the cursor ([scarpe-team/scarpe#648](https://github.com/scarpe-team/scarpe/pull/648)),
+opening files from Finder ([#650](https://github.com/scarpe-team/scarpe/pull/650)),
+`--app-version` ([#651](https://github.com/scarpe-team/scarpe/pull/651)) and the edit box's
+spelling underlines and checked corrections
+([codenamev/scarpe#1](https://github.com/codenamev/scarpe/pull/1)). On a Scarpe without the
+spelling support the editor runs without spell checking.
 
 ```sh
-git clone --branch native/open-documents https://github.com/codenamev/scarpe.git ~/scarpe
-cd ~/scarpe && gem install bundler -v 2.4.10 && bundle install
-
 git clone https://github.com/codenamev/get-up-offa-that-markdown.git
-cd ~/scarpe && bundle exec ruby exe/scarpe --native /path/to/get-up-offa-that-markdown/get_down.rb
+cd get-up-offa-that-markdown
+gem install bundler -v 2.4.10
+bundle install
+bundle exec scarpe --native "$PWD/get_down.rb"
 ```
 
 The first run builds Scarpe's renderer, which takes about a minute.
 
+If Nokogiri fails to build with Xcode 26's Clang, install with
+`BUNDLE_BUILD__NOKOGIRI='--with-cflags=-Wno-default-const-init-field-unsafe' bundle install`.
+
 ### Developing
 
-`./scarpe.sh` runs Scarpe from `~/scarpe` (or `$SCARPE`) without touching your clipboard,
-sounds or real home folder. To render the app headless and save a picture of it:
+`./scarpe.sh` runs the pinned Scarpe dependency (or `$SCARPE` for a source checkout override) without touching your clipboard, sounds or real home folder. To render the app headless and save a picture of it:
 
 ```sh
 ./scarpe.sh peek get_down.rb --scale 2 --shot shots/look.png --layout
 ```
 
+Run the spelling tests with `ruby test/spelling_test.rb`. The dictionary, its license and how
+`data/en/words.txt` is made from it are in [data/en](data/en/README.md).
+
 ### Packaging
 
-From the Scarpe clone:
+From a clone of [codenamev/scarpe](https://github.com/codenamev/scarpe) on its `editor` branch:
 
 ```sh
 ./scarpe.sh peek icon/icon.rb --shot icon/square.png        # in this folder: draw the icon
@@ -76,17 +92,17 @@ magick icon/square.png \( -size 1024x1024 xc:none -fill white \
 cd ~/scarpe && bundle exec ruby exe/scarpe package /path/to/get_down.rb --native --dmg \
   --name "Get Up Offa That Markdown" --icon /path/to/icon/icon.png --output /path/to/dist \
   --opens net.daringfireball.markdown --opens public.plain-text --opens md --opens markdown \
-  --app-version 1.1.1
+  --include spelling.rb --include data --app-version 1.2.0
 ```
 
-`--opens` is what lets Finder offer the app under **Open With** for Markdown and text files.
-`--app-version` sets the version Finder's Get Info shows. It comes from
-[scarpe-team/scarpe#651](https://github.com/scarpe-team/scarpe/pull/651); until that's merged,
-leave it out, or build from a branch that also has that commit.
+`--opens` is what lets Finder offer the app under **Open With** for Markdown and text files,
+`--include` carries the spell checker and its word list, and `--app-version` sets the version
+Finder's Get Info shows. The spell checker is plain Ruby, because a packaged app carries no gems.
 
 ## Credits
 
-Built on [Scarpe](https://github.com/scarpe-team/scarpe) and _why's Shoes. The name is a nod
+Built on [Scarpe](https://github.com/scarpe-team/scarpe) and _why's Shoes. Spell checking was
+designed by [@dblock](https://github.com/dblock), after his rubocop-spellcheck. The name is a nod
 to James Brown's "Get Up Offa That Thing".
 
 ## License

@@ -10,6 +10,11 @@
 require "json"
 require "fileutils"
 require "pathname"
+require_relative "spelling"
+
+# Spell checking needs an edit box that underlines and corrects (codenamev/scarpe's `editor`
+# branch). On a Scarpe without it the editor still works, just without spelling.
+SPELLING = Shoes::EditBox.method_defined?(:replace_checked)
 
 INK = "#2b2118"
 MUTED = "#8c7b6b"
@@ -250,6 +255,8 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
 
   def render
     text = @editor.text
+    previous = @rendered_text || text
+    @rendered_text = text
     @preview.clear do
       blocks = Markdown.blocks(text)
       if blocks.empty?
@@ -260,6 +267,31 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
     words = text.split.size
     @status.text = "#{@path ? File.basename(@path) : "Untitled"}  ·  #{words} #{words == 1 ? "word" : "words"}"
     save_draft
+    spell_check(text, previous) if SPELLING
+  end
+
+  # Underlines what is misspelled, and once typing pauses for 0.6 s corrects the words this run
+  # of edits completed. The edit box refuses a correction if the text changed meanwhile.
+  def spell_check(text, previous)
+    @spelling_timer&.stop
+    findings = @spelling.check(text)
+    @editor.spelling = { text: text, ranges: findings.map { |finding| [finding.first, finding.last] } }
+    context = @editor.edit_context
+    unless context && context["autocorrect"] && @autocorrect.checked?
+      @spelling_previous = nil
+      return
+    end
+
+    @spelling_previous ||= previous
+    baseline = @spelling_previous
+    cursor = context.fetch("cursor")
+    @spelling_timer = timer(0.6) do
+      next unless @editor.text == text && @autocorrect.checked?
+
+      @spelling_previous = nil
+      corrected = @spelling.autocorrect(text, findings, previous: baseline, cursor: cursor)
+      @editor.replace_checked(text, corrected) unless corrected == text
+    end
   end
 
   def open_file
@@ -307,8 +339,14 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
     render
   end
 
+  def autocorrect_changed
+    @spelling_previous = nil
+    @spelling_timer&.stop
+  end
+
   draft = load_draft
   @path = draft["path"]
+  @spelling = Spelling.new if SPELLING
 
   # Shows the panes that are switched on, sharing the width between them. One always stays on.
   def show_panes(changed)
@@ -364,7 +402,15 @@ Shoes.app(title: "Get Up Offa That Markdown", width: 1040, height: 700, resizabl
   end
 
   # which panes show, on the right of the pane labels
-  flow right: 20, top: 74, width: 190 do
+  flow right: 20, top: 74, width: SPELLING ? 290 : 190 do
+    if SPELLING
+      @autocorrect = check { autocorrect_changed }
+      @autocorrect.checked = true
+      para("Autocorrect", size: 13, stroke: INK, margin: [4, 2, 16, 0]).click do
+        @autocorrect.checked = !@autocorrect.checked?
+        autocorrect_changed
+      end
+    end
     @show_write = check { show_panes(:write) }
     para("Write", size: 13, stroke: INK, margin: [4, 2, 16, 0]).click { flip(@show_write, :write) }
     @show_preview = check { show_panes(:preview) }

@@ -1,0 +1,65 @@
+GIT
+  remote: https://github.com/codenamev/scarpe.git
+  revision: 9f23aaccd3bd8cb76ca2fd22c2fc2ff232f1b410
+  ref: 9f23aaccd3bd8cb76ca2fd22c2fc2ff232f1b410
+  specs:
+    lacci (1.0.0)
+      scarpe-components (~> 1.0.0)
+    scarpe (1.0.0)
+      base64
+      bigdecimal
+      csv
+      fastimage (~> 2.2.7)
+      lacci (~> 1.0.0)
+      logging (~> 2.3.1)
+      nokogiri (~> 1.15.2)
+      observer
+      scarpe-components (~> 1.0.0)
+      sqlite3 (~> 1.6.3)
+      webrick (~> 1.7.0)
+      webview_ruby (~> 0.1.1)
+    scarpe-components (1.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    base64 (0.3.0)
+    bigdecimal (4.1.3)
+    csv (3.3.6)
+    fastimage (2.2.7)
+    ffi (1.17.4-arm64-darwin)
+    ffi-compiler (1.4.2)
+      ffi (>= 1.15.5)
+      rake
+    little-plugger (1.1.4)
+    logging (2.3.1)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.14)
+    mini_portile2 (2.8.9)
+    minitest (5.27.0)
+    multi_json (1.21.2)
+    nokogiri (1.15.7)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
+    observer (0.1.2)
+    racc (1.8.1)
+    rake (13.4.2)
+    sqlite3 (1.6.9)
+      mini_portile2 (~> 2.8.0)
+    webrick (1.7.0)
+    webview_ruby (0.1.2)
+      ffi
+      ffi-compiler
+      rake
+
+PLATFORMS
+  arm64-darwin-23
+
+DEPENDENCIES
+  lacci!
+  minitest (~> 5.0)
+  scarpe!
+  scarpe-components!
+
+BUNDLED WITH
+   2.4.10
