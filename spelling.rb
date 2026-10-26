@@ -40,7 +40,7 @@ class Spelling
     prose.to_enum(:scan, WORD).each do
       match = Regexp.last_match
       word = match[0]
-      start = prose[0...match.begin(0)].bytesize
+      start = match.byteoffset(0).first
       next if correct?(word)
 
       findings << Finding.new(word: word, first: start, last: start + word.bytesize)
