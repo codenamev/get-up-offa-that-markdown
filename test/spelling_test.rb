@@ -86,6 +86,19 @@ class SpellingTest < Minitest::Test
     %w[misspelled running unhappiness happily].each { |w| assert_includes words, w }
   end
 
+  # Each word's offset was measured by copying the text before it, so a check took time in the
+  # square of the length: 120 ms a keystroke at 100 KB. Four times the text should now take
+  # about four times as long, never the sixteen a quadratic check needs.
+  def test_checking_grows_in_step_with_the_text
+    paragraph = "Teh quick brwn fox jumps over the lazy dog, then helo again. " * 20 + "\n\n"
+    small = paragraph * 80
+    large = small * 4
+    time = ->(text) { 3.times.map { t = Process.clock_gettime(Process::CLOCK_MONOTONIC); CHECKER.check(text); Process.clock_gettime(Process::CLOCK_MONOTONIC) - t }.min }
+    time.(small)
+    assert_operator time.(large) / time.(small), :<, 8, "a #{large.bytesize / 1024} KB check should grow linearly"
+    assert_equal CHECKER.check(small).size * 4, CHECKER.check(large).size
+  end
+
   private
 
   def correct(source, previous:)
