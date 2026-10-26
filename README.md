@@ -30,7 +30,7 @@ Ruby with [Scarpe](https://github.com/scarpe-team/scarpe), which runs
 
 ## Install
 
-1. Download `Get-Up-Offa-That-Markdown-1.1.1-arm64.dmg` from the
+1. Download `Get-Up-Offa-That-Markdown-1.2.0-arm64.dmg` from the
    [latest release](https://github.com/codenamev/get-up-offa-that-markdown/releases/latest).
 2. Open it and drag the app into **Applications**.
 3. The first time, macOS will block it, because the app isn't notarised by Apple. Open it once
